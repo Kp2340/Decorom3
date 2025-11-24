@@ -4,6 +4,7 @@ com\decorom\backend\controller\PaymentController.class
 com\decorom\backend\entity\Order$CustomerAddress.class
 com\decorom\backend\repository\OrderRepository.class
 com\decorom\backend\service\OrderService.class
+com\decorom\backend\config\AppConfig.class
 com\decorom\backend\DecoromBackendApplication.class
 com\decorom\backend\service\PricingService.class
 com\decorom\backend\dto\CheckoutRequest.class

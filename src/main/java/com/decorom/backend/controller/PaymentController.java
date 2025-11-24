@@ -16,8 +16,11 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
 
     private final OrderService orderService;
@@ -35,11 +38,14 @@ public class PaymentController {
             @RequestBody Map<String, String> payload,
             @RequestHeader("X-VERIFY") String xVerify) {
 
+        log.info("Received payment callback. X-VERIFY: {}", xVerify);
+
         String response = payload.get("response"); // Base64 encoded JSON
 
         // 1. Verify Checksum
         // X-VERIFY = SHA256(response + saltKey) + ### + saltIndex
         if (!verifyChecksum(response, xVerify)) {
+            log.error("Checksum verification failed for payment callback");
             return ResponseEntity.badRequest().body("Invalid Checksum");
         }
 
@@ -60,6 +66,7 @@ public class PaymentController {
 
                 order.setPaymentStatus(Order.PaymentStatus.SUCCESS);
                 orderService.saveOrder(order);
+                log.info("Payment SUCCESS for Order ID: {}", orderId);
 
                 // 4. Final Confirmation
                 emailService.sendPaymentConfirmation(order);
@@ -69,13 +76,14 @@ public class PaymentController {
                 orderService.getOrderById(orderId).ifPresent(order -> {
                     order.setPaymentStatus(Order.PaymentStatus.FAILED);
                     orderService.saveOrder(order);
+                    log.warn("Payment FAILED for Order ID: {}", orderId);
                 });
             }
 
             return ResponseEntity.ok("Received");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error processing payment callback", e);
             return ResponseEntity.internalServerError().body("Error processing callback");
         }
     }

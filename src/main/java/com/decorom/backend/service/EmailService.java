@@ -9,8 +9,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
     private final JavaMailSender mailSender;
@@ -61,6 +64,7 @@ public class EmailService {
                 order.isPriceValid() ? "YES" : "NO - POTENTIAL FRAUD",
                 order.getUserIP());
 
+        log.info("Sending order alert email for Order ID: {}", order.getId());
         sendEmail("kushpatel2354@gmail.com", subject, body);
     }
 
@@ -68,6 +72,7 @@ public class EmailService {
         String subject = "Payment Received - Order #" + order.getId();
         String body = "<h1>Payment Success</h1><p>The payment for order " + order.getId()
                 + " has been successfully verified.</p>";
+        log.info("Sending payment confirmation email for Order ID: {}", order.getId());
         sendEmail("kushpatel2354@gmail.com", subject, body);
     }
 
@@ -80,8 +85,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(body, true);
             mailSender.send(message);
+            log.info("Email sent successfully to: {}", to);
         } catch (MessagingException e) {
-            e.printStackTrace(); // Log this properly in production
+            log.error("Failed to send email to: {}", to, e);
         }
     }
 }
